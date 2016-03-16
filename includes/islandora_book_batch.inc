@@ -231,7 +231,7 @@ EOXML;
         elseif ($s_xml->getName() == 'record') {
           $datastream->content = static::runXslTransform(array(
             'input' => $xml,
-            'xsl' => $dir . '/transforms/MARC21slim2MODS3-4.xsl',
+            'xsl' => drupal_get_path('module','islandora_book_batch') . '/transforms/MARC21slim2MODS3-5-lmmi.xsl',
           ));
         }
         // DC, transform to MODS and set.
