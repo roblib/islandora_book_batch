@@ -156,6 +156,12 @@ Revision 1.02 - Added Log Comment  2003/03/24 19:37:42  ckeith
                 <xsl:when test="$leader6='c' or $leader6='d' or $leader6='i' or $leader6='j'">MU</xsl:when>
             </xsl:choose>
         </xsl:variable>
+        <!-- Pass the place term in 751 to the host item for Ryrie-Cambpell lmmi -->
+        <xsl:variable name="place751">
+            <xsl:for-each select="marc:datafield[@tag='751']/marc:subfield[@code='a']">
+                <xsl:value-of select="text()"/>
+            </xsl:for-each>
+        </xsl:variable>
 
         <!-- titleInfo -->
 
@@ -868,16 +874,6 @@ Revision 1.02 - Added Log Comment  2003/03/24 19:37:42  ckeith
                     </placeTerm>
                 </place>
             </xsl:for-each>
-            <!-- Mapping 751a country information for Ryrie-Campbell -->
-            <xsl:for-each select="marc:datafield[@tag=751]/marc:subfield[@code='a']">
-                <place>
-                    <placeTerm>
-                        <xsl:attribute name="type">text</xsl:attribute>
-                        <xsl:attribute name="authority">marccountry</xsl:attribute>
-                        <xsl:value-of select="."/>
-                    </placeTerm>
-                </place>
-            </xsl:for-each>
             <xsl:for-each select="marc:datafield[@tag=046]/marc:subfield[@code='m']">
                 <dateValid point="start">
                     <xsl:value-of select="."/>
@@ -1059,20 +1055,20 @@ Revision 1.02 - Added Log Comment  2003/03/24 19:37:42  ckeith
                     <xsl:value-of select="."/>
                 </edition>
             </xsl:for-each>
-            <xsl:for-each select="marc:leader">
-                <issuance>
-                    <xsl:choose>
-                        <xsl:when test="$leader7='a' or $leader7='c' or $leader7='d' or $leader7='m'">monographic</xsl:when>
-                        <xsl:when test="$leader7='m' and ($leader19='a' or $leader19='b' or $leader19='c')">multipart monograph</xsl:when>
-                        <!-- 1.106 20141218 -->
-                        <xsl:when test="$leader7='m' and ($leader19=' ')">single unit</xsl:when>
-                        <xsl:when test="$leader7='m' and ($leader19='#')">single unit</xsl:when>
-                        <xsl:when test="$leader7='i'">integrating resource</xsl:when>
-                        <xsl:when test="$leader7='b' or $leader7='s'">serial</xsl:when>
-                    </xsl:choose>
-                </issuance>
-            </xsl:for-each>
-
+            <!-- Do not select the issuance for Ryrie-Cambpell lmmi.
+			<xsl:for-each select="marc:leader">
+				<issuance>
+					<xsl:choose>
+						<xsl:when test="$leader7='a' or $leader7='c' or $leader7='d' or $leader7='m'">monographic</xsl:when>
+						<xsl:when test="$leader7='m' and ($leader19='a' or $leader19='b' or $leader19='c')">multipart monograph</xsl:when>
+						<xsl:when test="$leader7='m' and ($leader19=' ')">single unit</xsl:when>
+						<xsl:when test="$leader7='m' and ($leader19='#')">single unit</xsl:when>
+						<xsl:when test="$leader7='i'">integrating resource</xsl:when>
+						<xsl:when test="$leader7='b' or $leader7='s'">serial</xsl:when>
+					</xsl:choose>
+				</issuance>
+			</xsl:for-each>
+			-->
             <!-- 1.96 20140422 -->
             <xsl:for-each select="marc:datafield[@tag=310]|marc:datafield[@tag=321]">
                 <frequency>
@@ -2332,7 +2328,10 @@ Revision 1.02 - Added Log Comment  2003/03/24 19:37:42  ckeith
 
         <xsl:for-each select="marc:datafield[@tag=772]|marc:datafield[@tag=773]">
             <relatedItem type="host">
-                <xsl:call-template name="relatedItem76X-78X"/>
+                <!-- Pass place term from 751 to host for Ryrie-Campbell lmmi -->
+                <xsl:call-template name="relatedItem76X-78X">
+                    <xsl:with-param name="place751" select="$place751"></xsl:with-param>
+                </xsl:call-template>
             </relatedItem>
         </xsl:for-each>
         <xsl:for-each select="marc:datafield[@tag=776]">
@@ -2974,10 +2973,15 @@ Revision 1.02 - Added Log Comment  2003/03/24 19:37:42  ckeith
         <xsl:call-template name="relatedPart"/>
     </xsl:template>
     <xsl:template name="relatedItem76X-78X">
+        <!-- Pass place from 751 to host for Ryrie-Campbell -->
+        <xsl:param name="place751"/>
         <xsl:call-template name="displayLabel"/>
         <xsl:call-template name="relatedTitle76X-78X"/>
         <xsl:call-template name="relatedName"/>
-        <xsl:call-template name="relatedOriginInfo"/>
+        <!-- Pass place from 751 to host for Ryrie-Campbell -->
+        <xsl:call-template name="relatedOriginInfo">
+            <xsl:with-param name="place751" select="$place751"/>
+        </xsl:call-template>
         <xsl:call-template name="relatedLanguage"/>
         <xsl:call-template name="relatedExtent"/>
         <xsl:call-template name="relatedNote"/>
@@ -3136,6 +3140,8 @@ Revision 1.02 - Added Log Comment  2003/03/24 19:37:42  ckeith
         </xsl:for-each>
     </xsl:template>
     <xsl:template name="relatedOriginInfo">
+        <!-- Use place from the 751 for Ryrie-Campbell lmmi -->
+        <xsl:param name="place751"/>
         <xsl:if test="marc:subfield[@code='b' or @code='d'] or marc:subfield[@code='f']">
             <originInfo>
                 <xsl:if test="@tag=775">
@@ -3154,6 +3160,15 @@ Revision 1.02 - Added Log Comment  2003/03/24 19:37:42  ckeith
                         <xsl:value-of select="."/>
                     </publisher>
                 </xsl:for-each>
+                <place>
+                    <placeTerm type="text" authority="marccountry">
+                        <xsl:value-of select="$place751"/>
+                    </placeTerm>
+                </place>
+                <!-- Mark issuance as serial for all records for Ryrie-Campbell lmmi. -->
+                <issuance>
+                    <xsl:text>serial</xsl:text>
+                </issuance>
                 <xsl:for-each select="marc:subfield[@code='b']">
                     <edition>
                         <xsl:value-of select="."/>
@@ -4537,17 +4552,27 @@ Revision 1.02 - Added Log Comment  2003/03/24 19:37:42  ckeith
     </xsl:template>
 
     <xsl:template name="createGenreFrom655">
-        <genre authority="marcgt">
-            <xsl:attribute name="authority">
-                <xsl:value-of select="marc:subfield[@code='2']"/>
-            </xsl:attribute>
-            <!-- Template checks for altRepGroup - 880 $6 -->
-            <xsl:call-template name="xxx880"/>
-            <xsl:call-template name="subfieldSelect">
-                <xsl:with-param name="codes">abvxyz</xsl:with-param>
-                <xsl:with-param name="delimeter">-</xsl:with-param>
-            </xsl:call-template>
-        </genre>
+        <!-- Break into multiple genre fields for Ryrie-Campbell lmmi -->
+        <xsl:for-each select="marc:subfield[@code='a' or @code='v']">
+            <genre authority="marcgt">
+                <xsl:value-of select="text()"/>
+            </genre>
+        </xsl:for-each>
+        <!-- Don't use standard concatenation for Ryrie-Campbell lmmi
+		<genre authority="marcgt">
+			<xsl:attribute name="authority">
+				<xsl:value-of select="marc:subfield[@code='2']"/>
+			</xsl:attribute>
+		-->
+        <!-- Template checks for altRepGroup - 880 $6 -->
+        <!--
+			<xsl:call-template name="xxx880"/>
+			<xsl:call-template name="subfieldSelect">
+				<xsl:with-param name="codes">abvxyz</xsl:with-param>
+				<xsl:with-param name="delimeter">-</xsl:with-param>
+			</xsl:call-template>
+		</genre>
+		-->
     </xsl:template>
 
     <!-- tOC 505 -->
