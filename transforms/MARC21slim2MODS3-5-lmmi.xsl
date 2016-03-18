@@ -4553,9 +4553,12 @@ Revision 1.02 - Added Log Comment  2003/03/24 19:37:42  ckeith
 
     <xsl:template name="createGenreFrom655">
         <!-- Break into multiple genre fields for Ryrie-Campbell lmmi -->
-        <xsl:for-each select="marc:subfield[@code='a' or @code='v']">
+        <xsl:for-each select="marc:subfield[@code='a' or @code='v' or @code='x' or @code='b' or @code='y' or @code='z']">
             <genre authority="marcgt">
-                <xsl:value-of select="text()"/>
+                <xsl:call-template name="chopPunctuation">
+                    <xsl:with-param name="chopString" select="."/>
+                </xsl:call-template>
+
             </genre>
         </xsl:for-each>
         <!-- Don't use standard concatenation for Ryrie-Campbell lmmi
